@@ -1206,7 +1206,7 @@ body {
 .hero-image3 {
   position: absolute;
   inset: 0;
-  background-image: url("assets/Fondo_etiqueta2.jpg");
+  background-image: url("assets/Fondo_etiqueta22.jpg");
   background-repeat: no-repeat;
   background-size: 220%; /* o 'contain' según el ajuste deseado */
   background-position: center center; /* Centrado horizontal y vertical */

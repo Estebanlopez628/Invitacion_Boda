@@ -1209,7 +1209,7 @@ body {
   background: url("assets/Fondo_etiqueta2.jpg");
   background-repeat: no-repeat;
   background-size: 220%;
-  background-position: -245px center;
+  background-position: -290px center;
   
   /* Reduce el brillo al 40% para oscurecerla */
   filter: brightness(0.08); 

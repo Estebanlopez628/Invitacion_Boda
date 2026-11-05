@@ -10,6 +10,30 @@ const params = new URLSearchParams(location.search);
 const nombre = (params.get("nombre") || "").trim();
 const cupos = (params.get("cupos") || "").trim();
 
+/*function setGuestText() {
+  const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Para ti";
+  
+  // 1. En la portada: Solo actualizamos el nombre del invitado
+  document.getElementById("guestName").textContent = guest;
+  
+  // 2. En la sección principal: Actualizamos nombre y cantidad de cupos
+  document.getElementById("guestName2").textContent = guest;
+  document.getElementById("guestSeats2").textContent = cupos ? cupos : "Por confirmar";
+  
+  // 3. Enlace dinámico para WhatsApp (Directo a tu número)
+  const telEsteban = "573163826366";
+
+  const msg = `¡Hola, Esteban y Dayana! Soy ${guest}. Confirmo mi asistencia a su boda este 19 de diciembre de 2026${cupos ? ` haciendo uso de la reserva asignada (${cupos} cupo${cupos > 1 ? 's' : ''})` : ''}. ¡Ahí estaré para celebrar con ustedes!`;
+
+  const btnWhatsapp = document.getElementById("whatsappBtn");
+  if (btnWhatsapp) {
+    btnWhatsapp.href = `https://wa.me/${telEsteban}?text=${encodeURIComponent(msg)}`;
+  }
+}*/
+
+// Reemplaza esta URL con la "URL de la aplicación web" real que te de Google Apps Script al desplegar
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4sFH8Nm1vcJ0ghsf_kFeY-ScfDl0Okw90xyEM7YkGFlKY9R5kuGwJ1J1Z0AylTgcC/exec";
+
 function setGuestText() {
   const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Para ti";
   
@@ -28,6 +52,17 @@ function setGuestText() {
   const btnWhatsapp = document.getElementById("whatsappBtn");
   if (btnWhatsapp) {
     btnWhatsapp.href = `https://wa.me/${telEsteban}?text=${encodeURIComponent(msg)}`;
+    
+    // Añadimos un listener para registrar el "SI" de forma automática y silenciosa al hacer clic
+    btnWhatsapp.addEventListener("click", () => {
+      if (nombre) {
+        // Petición silenciosa a Google Sheets en segundo plano
+        const confirmationUrl = `${GOOGLE_WEB_APP_URL}?action=confirmar&nombre=${encodeURIComponent(nombre)}`;
+        fetch(confirmationUrl, { method: "GET", mode: "no-cors" }).catch(err => {
+          console.log("Registro de asistencia enviado en segundo plano");
+        });
+      }
+    });
   }
 }
 setGuestText();

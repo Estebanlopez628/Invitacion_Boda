@@ -12,7 +12,7 @@ const cupos = (params.get("cupos") || "").trim();
 const esReconfirmacion = params.get("reconfirmar") === "true";
 
 // URL de tu aplicación web de Google Apps Script
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzjEXR4S9sAtVh9TZ7Bmr-7yjOO83SzjVJ5zq0tt79uIZNi5ORzfBw50qZITsn8zJuz/exec";
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzscZbWKCZtIjLxTOQZYcQXwas3rgJib8JM5AeiF6s/dev";
 
 // ==========================================================================
 // 1. LÓGICA DE RECONFIRMACIÓN (10 DÍAS ANTES) VS VISTA NORMAL
@@ -40,6 +40,36 @@ function setGuestText() {
   const guestSeats2El = document.getElementById("guestSeats2");
   if (guestSeats2El) guestSeats2El.textContent = cupos ? cupos : "Por confirmar";
   
+  
+// 3. Enlace dinámico para WhatsApp (Directo a tu número)
+  const telEsteban = "573163826366";
+  
+  // Determinamos si el mensaje debe ir en plural (más de 1 cupo)
+  const esPlural = cupos && Number(cupos) > 1;
+
+  const saludo = esPlural ? `¡Hola, Esteban y Dayana! Somos ${guest}.` : `¡Hola, Esteban y Dayana! Soy ${guest}.`;
+  const accion = esPlural ? "Confirmamos nuestra asistencia" : "Confirmo mi asistencia";
+  const cierre = esPlural ? "¡Ahí estaremos para celebrar con ustedes!" : "¡Ahí estaré para celebrar con ustedes!";
+  const detalleCupos = cupos ? ` haciendo uso de la reserva asignada (${cupos} cupo${esPlural ? 's' : ''})` : '';
+
+  const msg = `${saludo} ${accion} a su boda este 19 de diciembre de 2026${detalleCupos}. ${cierre}`;
+
+  const btnWhatsapp = document.getElementById("whatsappBtn");
+  if (btnWhatsapp) {
+    btnWhatsapp.href = `https://wa.me/${telEsteban}?text=${encodeURIComponent(msg)}`;
+    
+    // Listener para registrar el "SI" de forma automática y silenciosa al hacer clic
+    btnWhatsapp.addEventListener("click", () => {
+      if (nombre) {
+        const confirmationUrl = `${GOOGLE_WEB_APP_URL}?action=confirmar&nombre=${encodeURIComponent(nombre)}`;
+        fetch(confirmationUrl, { method: "GET", mode: "no-cors" }).catch(err => {
+          console.log("Registro de asistencia enviado en segundo plano");
+        });
+      }
+    });
+  }
+}
+  /*
   // 3. Enlace dinámico para WhatsApp (Directo a tu número)
   const telEsteban = "573163826366";
   const msg = `¡Hola, Esteban y Dayana! Soy ${guest}. Confirmo mi asistencia a su boda este 19 de diciembre de 2026${cupos ? ` haciendo uso de la reserva asignada (${cupos} cupo${cupos > 1 ? 's' : ''})` : ''}. ¡Ahí estaré para celebrar con ustedes!`;
@@ -58,7 +88,7 @@ function setGuestText() {
       }
     });
   }
-}
+}*/
 
 function transformarPaginaParaReconfirmacion() {
   const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Invitado";

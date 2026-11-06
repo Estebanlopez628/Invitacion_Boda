@@ -69,30 +69,19 @@ function setGuestText() {
     });
   }
 }
-  /*
-  // 3. Enlace dinámico para WhatsApp (Directo a tu número)
-  const telEsteban = "573163826366";
-  const msg = `¡Hola, Esteban y Dayana! Soy ${guest}. Confirmo mi asistencia a su boda este 19 de diciembre de 2026${cupos ? ` haciendo uso de la reserva asignada (${cupos} cupo${cupos > 1 ? 's' : ''})` : ''}. ¡Ahí estaré para celebrar con ustedes!`;
-
-  const btnWhatsapp = document.getElementById("whatsappBtn");
-  if (btnWhatsapp) {
-    btnWhatsapp.href = `https://wa.me/${telEsteban}?text=${encodeURIComponent(msg)}`;
-    
-    // Listener para registrar el "SI" de forma automática y silenciosa al hacer clic
-    btnWhatsapp.addEventListener("click", () => {
-      if (nombre) {
-        const confirmationUrl = `${GOOGLE_WEB_APP_URL}?action=confirmar&nombre=${encodeURIComponent(nombre)}`;
-        fetch(confirmationUrl, { method: "GET", mode: "no-cors" }).catch(err => {
-          console.log("Registro de asistencia enviado en segundo plano");
-        });
-      }
-    });
-  }
-}*/
 
 function transformarPaginaParaReconfirmacion() {
   const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Invitado";
   
+  // Calculamos los cupos y el plural basándonos en el parámetro 'cupos' de la URL
+  const totalCupos = cupos ? parseInt(cupos, 10) : 1;
+  const esPlural = (totalCupos > 1) || (guest.toLowerCase().includes(' y ') || guest.includes('&'));
+
+  const textoBienvenida = esPlural ? '"Queremos contar con ustedes"' : '"Queremos contar contigo"';
+  const textoParrafo = esPlural 
+    ? "Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarán a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando su asistencia."
+    : "Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarás a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando tu asistencia.";
+
   // Ocultamos la portada si existe y mostramos el contenedor principal
   if (cover) cover.style.display = "none";
   if (invitation) {
@@ -108,19 +97,21 @@ function transformarPaginaParaReconfirmacion() {
         
         <!-- Bloque 1: Se oculta al confirmar -->
         <div id="reconfirmFormBlock">
-           <div class="dress-footer-note" style="color: #efd8b5; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 20px; font-family: "Great Vibes", cursive;">¡${guest}!</div>
+           <div class="dress-footer-note" style="color: #efd8b5; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 20px; font-family: 'Cormorant Garamond', serif;">¡${guest}!</div>
           
-          <h2 style="font-family: 'Great Vibes', cursive; font-size: 25px; color: #fff7eb; margin-bottom: 8px;">"Queremos contar contigo"</h2>
+          <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 18px; color: #fff7eb; margin-bottom: 8px; font-style: normal;">
+            ${textoBienvenida}
+          </h2>
           
           <div class="ornament" style="margin-bottom: 05px;"><span></span>♡<span></span></div>
           
           <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #f7f0e6; text-align: center;">
-            Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarás a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando tu asistencia.
+            ${textoParrafo}
           </p>
 
           <div id="reconfirmBox">
             <button id="btnReconfirmarAccion" class="cream-btn" style="width: 100%; justify-content: center; font-size: 13px; padding: 18px; cursor: pointer;">
-              ✓ &nbsp; CONFIRMO MI ASISTENCIA
+              ✓ &nbsp; ${esPlural ? 'CONFIRMAMOS NUESTRA ASISTENCIA' : 'CONFIRMO MI ASISTENCIA'}
             </button>
           </div>
         </div>
@@ -146,13 +137,13 @@ function transformarPaginaParaReconfirmacion() {
         btnAccion.disabled = true;
         btnAccion.textContent = "REGISTRANDO...";
 
-        let totalCupos = Number(cupos) || 1;
+        let finalCupos = totalCupos;
 
         try {
           const response = await fetch(`${GOOGLE_WEB_APP_URL}?action=reconfirmar&nombre=${encodeURIComponent(nombre)}`);
           const data = await response.json();
           if (data && data.cupos) {
-            totalCupos = parseInt(data.cupos);
+            finalCupos = parseInt(data.cupos);
           }
         } catch (e) {
           console.log("Reconfirmación enviada / fallback de red");
@@ -163,7 +154,7 @@ function transformarPaginaParaReconfirmacion() {
         const successDiv = document.getElementById("reconfirmSuccess");
         successDiv.style.display = "block";
 
-        const mensajeFinal = totalCupos === 1
+        const mensajeFinal = finalCupos === 1
           ? "Muchas gracias, estamos ansiosos de compartir este día contigo."
           : "Muchas gracias, estamos ansiosos de compartir este día con ustedes.";
 

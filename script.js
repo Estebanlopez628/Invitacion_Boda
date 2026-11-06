@@ -12,7 +12,7 @@ const cupos = (params.get("cupos") || "").trim();
 const esReconfirmacion = params.get("reconfirmar") === "true";
 
 // URL de tu aplicación web de Google Apps Script
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4sFH8Nm1vcJ0ghsf_kFeY-ScfDl0Okw90xyEM7YkGFlKY9R5kuGwJ1J1Z0AylTgcC/exec";
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDQjcDuEIoVDmqN7LGqaPW6y79mzGFi7TZd-PfMDsiPPQ4VDtixjRf6-t0wm-ExDQa/exec";
 
 // ==========================================================================
 // 1. LÓGICA DE RECONFIRMACIÓN (10 DÍAS ANTES) VS VISTA NORMAL
@@ -71,34 +71,39 @@ function transformarPaginaParaReconfirmacion() {
   }
   document.body.classList.add("opened");
 
-  // Reemplazamos el contenido por la tarjeta de reconfirmación exclusiva
-invitation.innerHTML = `
+  // Reemplazamos el contenido por la tarjeta de reconfirmación exclusiva con los bloques separados
+  invitation.innerHTML = `
     <section class="dark-section" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
       <div class="section-inner" style="background: rgba(18, 16, 15, 0.95); border: 1px solid rgba(226, 189, 136, 0.4); border-radius: 20px; padding: 40px 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-width: 500px; width: 100%; text-align: center;">
         
-        <div class="dress-footer-note" style="color: #efd8b5; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 26px; font-family: "Great Vibes", cursive;">¡${guest}!</div>
-        
-        <h2 style="font-family: 'Great Vibes', cursive; font-size: 32px; color: #fff7eb; margin-bottom: 8px;">"Queremos contar contigo"</h2>
-        
-        <div class="ornament" style="margin-bottom: 05px;"><span></span>♡<span></span></div>
-        
-        <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #f7f0e6; text-align: center;">
-          Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarás a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando tu asistencia.
-        </p>
+        <!-- Bloque 1: Se oculta al confirmar -->
+        <div id="reconfirmFormBlock">
+           <div class="dress-footer-note" style="color: #efd8b5; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 20px; font-family: "Great Vibes", cursive;">¡${guest}!</div>
+          
+          <h2 style="font-family: 'Great Vibes', cursive; font-size: 25px; color: #fff7eb; margin-bottom: 8px;">"Queremos contar contigo"</h2>
+          
+          <div class="ornament" style="margin-bottom: 05px;"><span></span>♡<span></span></div>
+          
+          <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #f7f0e6; text-align: center;">
+            Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarás a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando tu asistencia.
+          </p>
 
-        <div id="reconfirmBox">
-          <button id="btnReconfirmarAccion" class="cream-btn" style="width: 100%; justify-content: center; font-size: 13px; padding: 18px; cursor: pointer;">
-            ✓ &nbsp; CONFIRMO MI ASISTENCIA
-          </button>
+          <div id="reconfirmBox">
+            <button id="btnReconfirmarAccion" class="cream-btn" style="width: 100%; justify-content: center; font-size: 13px; padding: 18px; cursor: pointer;">
+              ✓ &nbsp; CONFIRMO MI ASISTENCIA
+            </button>
+          </div>
         </div>
 
-        <div id="reconfirmSuccess" style="display: none; animation: fadeIn 1s ease forwards;">
-          <div style="font-size: 50px; color: #e2bd88; margin-bottom: 15px;">✨</div>
-          <h3 id="successTitle" style="font-size: 24px; color: #fff7eb; font-weight: 400; margin-bottom: 12px; font-family: 'Cormorant Garamond', serif; line-height: 1.3;"></h3>
-          <p style="font-size: 18px; font-style: italic; color: #f2dfca; line-height: 1.5; margin-top: 15px;">
-            ¡Nos vemos el 19 de diciembre de 2026 en Cali!
+        <!-- Bloque 2: Éxito (Icono de fiesta, mensaje limpio y serpentinas) -->
+        <div id="reconfirmSuccess" style="display: none; animation: fadeIn 1s ease forwards; padding: 10px 0;">
+          <div style="font-size: 55px; margin-bottom: 15px;">🎉</div>
+          <h3 id="successTitle" style="font-size: 24px; color: #fff7eb; font-weight: 400; margin-bottom: 15px; font-family: 'Cormorant Garamond', serif; line-height: 1.4;"></h3>
+          <p style="font-size: 18px; font-style: italic; color: #e2bd88; line-height: 1.5; margin-top: 15px;">
+            ¡Nos vemos el 19 de diciembre!
           </p>
         </div>
+
       </div>
     </section>
   `;
@@ -123,8 +128,8 @@ invitation.innerHTML = `
           console.log("Reconfirmación enviada / fallback de red");
         }
 
-        // Transición hacia el mensaje de éxito personalizado
-        document.getElementById("reconfirmBox").style.display = "none";
+        // Ocultamos el bloque inicial y mostramos únicamente el mensaje de éxito limpio
+        document.getElementById("reconfirmFormBlock").style.display = "none";
         const successDiv = document.getElementById("reconfirmSuccess");
         successDiv.style.display = "block";
 
@@ -133,6 +138,16 @@ invitation.innerHTML = `
           : "Muchas gracias, estamos ansiosos de compartir este día con ustedes.";
 
         document.getElementById("successTitle").textContent = mensajeFinal;
+
+        // Disparar animación festiva de serpentinas/confeti
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#e2bd88', '#ffffff', '#efd8b5', '#ffd700', '#ff6b6b']
+          });
+        }
       });
     }
   }, 100);
@@ -205,7 +220,6 @@ function updateCountdown() {
 
 updateCountdown();
 setInterval(updateCountdown, 1000);
-
 
 /*const music = document.getElementById("weddingMusic");
 const cover = document.getElementById("cover");

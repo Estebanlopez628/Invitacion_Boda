@@ -9,27 +9,215 @@ const status = document.getElementById("musicStatus");
 const params = new URLSearchParams(location.search);
 const nombre = (params.get("nombre") || "").trim();
 const cupos = (params.get("cupos") || "").trim();
+const esReconfirmacion = params.get("reconfirmar") === "true";
 
-/*function setGuestText() {
+// URL de tu aplicación web de Google Apps Script
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4sFH8Nm1vcJ0ghsf_kFeY-ScfDl0Okw90xyEM7YkGFlKY9R5kuGwJ1J1Z0AylTgcC/exec";
+
+// ==========================================================================
+// 1. LÓGICA DE RECONFIRMACIÓN (10 DÍAS ANTES) VS VISTA NORMAL
+// ==========================================================================
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (esReconfirmacion) {
+    transformarPaginaParaReconfirmacion();
+  } else {
+    setGuestText();
+  }
+});
+
+function setGuestText() {
   const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Para ti";
   
   // 1. En la portada: Solo actualizamos el nombre del invitado
-  document.getElementById("guestName").textContent = guest;
+  const guestNameEl = document.getElementById("guestName");
+  if (guestNameEl) guestNameEl.textContent = guest;
   
   // 2. En la sección principal: Actualizamos nombre y cantidad de cupos
-  document.getElementById("guestName2").textContent = guest;
-  document.getElementById("guestSeats2").textContent = cupos ? cupos : "Por confirmar";
+  const guestName2El = document.getElementById("guestName2");
+  if (guestName2El) guestName2El.textContent = guest;
+  
+  const guestSeats2El = document.getElementById("guestSeats2");
+  if (guestSeats2El) guestSeats2El.textContent = cupos ? cupos : "Por confirmar";
   
   // 3. Enlace dinámico para WhatsApp (Directo a tu número)
   const telEsteban = "573163826366";
-
   const msg = `¡Hola, Esteban y Dayana! Soy ${guest}. Confirmo mi asistencia a su boda este 19 de diciembre de 2026${cupos ? ` haciendo uso de la reserva asignada (${cupos} cupo${cupos > 1 ? 's' : ''})` : ''}. ¡Ahí estaré para celebrar con ustedes!`;
 
   const btnWhatsapp = document.getElementById("whatsappBtn");
   if (btnWhatsapp) {
     btnWhatsapp.href = `https://wa.me/${telEsteban}?text=${encodeURIComponent(msg)}`;
+    
+    // Listener para registrar el "SI" de forma automática y silenciosa al hacer clic
+    btnWhatsapp.addEventListener("click", () => {
+      if (nombre) {
+        const confirmationUrl = `${GOOGLE_WEB_APP_URL}?action=confirmar&nombre=${encodeURIComponent(nombre)}`;
+        fetch(confirmationUrl, { method: "GET", mode: "no-cors" }).catch(err => {
+          console.log("Registro de asistencia enviado en segundo plano");
+        });
+      }
+    });
   }
-}*/
+}
+
+function transformarPaginaParaReconfirmacion() {
+  const guest = nombre ? decodeURIComponent(nombre.replace(/\+/g, " ")) : "Invitado";
+  
+  // Ocultamos la portada si existe y mostramos el contenedor principal
+  if (cover) cover.style.display = "none";
+  if (invitation) {
+    invitation.classList.add("visible");
+    invitation.setAttribute("aria-hidden", "false");
+  }
+  document.body.classList.add("opened");
+
+  // Reemplazamos el contenido por la tarjeta de reconfirmación exclusiva
+invitation.innerHTML = `
+    <section class="dark-section" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div class="section-inner" style="background: rgba(18, 16, 15, 0.95); border: 1px solid rgba(226, 189, 136, 0.4); border-radius: 20px; padding: 40px 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-width: 500px; width: 100%; text-align: center;">
+        
+        <div class="dress-footer-note" style="color: #efd8b5; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 26px; font-family: "Great Vibes", cursive;">¡${guest}!</div>
+        
+        <h2 style="font-family: 'Great Vibes', cursive; font-size: 32px; color: #fff7eb; margin-bottom: 8px;">"Queremos contar contigo"</h2>
+        
+        <div class="ornament" style="margin-bottom: 05px;"><span></span>♡<span></span></div>
+        
+        <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #f7f0e6; text-align: center;">
+          Ya casi llega el momento más feliz de nuestras vidas, nos ilusiona enormemente saber que nos acompañarás a celebrar este gran día. Ayúdanos a afinar los últimos detalles confirmando tu asistencia.
+        </p>
+
+        <div id="reconfirmBox">
+          <button id="btnReconfirmarAccion" class="cream-btn" style="width: 100%; justify-content: center; font-size: 13px; padding: 18px; cursor: pointer;">
+            ✓ &nbsp; CONFIRMO MI ASISTENCIA
+          </button>
+        </div>
+
+        <div id="reconfirmSuccess" style="display: none; animation: fadeIn 1s ease forwards;">
+          <div style="font-size: 50px; color: #e2bd88; margin-bottom: 15px;">✨</div>
+          <h3 id="successTitle" style="font-size: 24px; color: #fff7eb; font-weight: 400; margin-bottom: 12px; font-family: 'Cormorant Garamond', serif; line-height: 1.3;"></h3>
+          <p style="font-size: 18px; font-style: italic; color: #f2dfca; line-height: 1.5; margin-top: 15px;">
+            ¡Nos vemos el 19 de diciembre de 2026 en Cali!
+          </p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  // Listener para ejecutar el evento de reconfirmación al presionar el botón
+  setTimeout(() => {
+    const btnAccion = document.getElementById("btnReconfirmarAccion");
+    if (btnAccion) {
+      btnAccion.addEventListener("click", async () => {
+        btnAccion.disabled = true;
+        btnAccion.textContent = "REGISTRANDO...";
+
+        let totalCupos = Number(cupos) || 1;
+
+        try {
+          const response = await fetch(`${GOOGLE_WEB_APP_URL}?action=reconfirmar&nombre=${encodeURIComponent(nombre)}`);
+          const data = await response.json();
+          if (data && data.cupos) {
+            totalCupos = parseInt(data.cupos);
+          }
+        } catch (e) {
+          console.log("Reconfirmación enviada / fallback de red");
+        }
+
+        // Transición hacia el mensaje de éxito personalizado
+        document.getElementById("reconfirmBox").style.display = "none";
+        const successDiv = document.getElementById("reconfirmSuccess");
+        successDiv.style.display = "block";
+
+        const mensajeFinal = totalCupos === 1
+          ? "Muchas gracias, estamos ansiosos de compartir este día contigo."
+          : "Muchas gracias, estamos ansiosos de compartir este día con ustedes.";
+
+        document.getElementById("successTitle").textContent = mensajeFinal;
+      });
+    }
+  }, 100);
+}
+
+// ==========================================================================
+// 2. CONTROL DE INTERFAZ Y REPRODUCTOR MULTIMEDIA
+// ==========================================================================
+
+if (openBtn) {
+  openBtn.addEventListener("click", async () => {
+    cover.classList.add("is-open");
+    invitation.classList.add("visible");
+    invitation.setAttribute("aria-hidden", "false");
+    document.body.classList.add("opened");
+
+    try {
+      if (music) {
+        await music.play();
+        if (toggle) toggle.textContent = "❚❚";
+        if (status) status.textContent = "Reproduciendo nuestra canción";
+      }
+    } catch (e) {
+      if (status) status.textContent = "Toca ▶ para reproducir nuestra canción";
+    }
+    setTimeout(() => {
+      const invEl = document.getElementById("invitation");
+      if (invEl) invEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+  });
+}
+
+if (toggle) {
+  toggle.addEventListener("click", async () => {
+    if (!music) return;
+    if (music.paused) {
+      await music.play();
+      toggle.textContent = "❚❚";
+      if (record) record.classList.remove("paused");
+      if (status) status.textContent = "Reproduciendo nuestra canción";
+    } else {
+      music.pause();
+      toggle.textContent = "▶";
+      if (record) record.classList.add("paused");
+      if (status) status.textContent = "Canción en pausa";
+    }
+  });
+}
+
+// ==========================================================================
+// 3. CUENTA REGRESIVA
+// ==========================================================================
+
+const target = new Date("2026-12-19T16:00:00-05:00").getTime();
+
+function updateCountdown() {
+  let diff = target - Date.now();
+  if (diff < 0) diff = 0;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const values = [d, h, m, s].map(v => String(v).padStart(2, "0"));
+  
+  const elements = document.querySelectorAll("#countdown b");
+  if (elements.length >= 4) {
+    elements.forEach((el, i) => el.textContent = values[i]);
+  }
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+
+/*const music = document.getElementById("weddingMusic");
+const cover = document.getElementById("cover");
+const invitation = document.getElementById("invitation");
+const openBtn = document.getElementById("openInvitation");
+const toggle = document.getElementById("musicToggle");
+const record = document.querySelector(".record");
+const status = document.getElementById("musicStatus");
+
+const params = new URLSearchParams(location.search);
+const nombre = (params.get("nombre") || "").trim();
+const cupos = (params.get("cupos") || "").trim();
 
 // Reemplaza esta URL con la "URL de la aplicación web" real que te de Google Apps Script al desplegar
 const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4sFH8Nm1vcJ0ghsf_kFeY-ScfDl0Okw90xyEM7YkGFlKY9R5kuGwJ1J1Z0AylTgcC/exec";
@@ -110,4 +298,4 @@ function updateCountdown() {
   document.querySelectorAll("#countdown b").forEach((el, i) => el.textContent = values[i]);
 }
 updateCountdown();
-setInterval(updateCountdown, 1000);
+setInterval(updateCountdown, 1000);*/

@@ -12,7 +12,7 @@ const cupos = (params.get("cupos") || "").trim();
 const esReconfirmacion = params.get("reconfirmar") === "true";
 
 // URL de tu aplicación web de Google Apps Script
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzscZbWKCZtIjLxTOQZYcQXwas3rgJib8JM5AeiF6s/dev";
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxkltJ2OGT3ln3DaivyoR7xoWPcD-95rbRaQftia6npKqRufnNar7uaOtOgJb-diuCO/exec";
 
 // ==========================================================================
 // 1. LÓGICA DE RECONFIRMACIÓN (10 DÍAS ANTES) VS VISTA NORMAL
